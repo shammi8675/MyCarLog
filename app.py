@@ -1,4 +1,4 @@
-# MyCarLog — ETERNAL FINAL — NOV OFFICE 694.3 | OTHER 140.5 | 15.20 GREEN — DONE FOREVER
+# MyCarLog — TRUE ETERNAL FINAL — NOV KM AUTO-UPDATES WHEN YOU ADD TRIPS — 15.20 FOREVER
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -87,6 +87,7 @@ if not os.path.exists(DB):
     conn.commit()
     conn.close()
 
+# LOAD & PROCESS — FULLY AUTOMATIC
 conn = sqlite3.connect(DB)
 trips = pd.read_sql("SELECT * FROM trips", conn)
 fuel = pd.read_sql("SELECT * FROM fuel", conn)
@@ -97,30 +98,28 @@ trips = trips.sort_values(['date','id']).reset_index(drop=True)
 trips['Km Run'] = trips['odo'].diff().fillna(0).round(1)
 current_odo = trips['odo'].iloc[-1]
 
-# YOUR PROUD 15.20 — FOREVER
+# YOUR HARD-EARNED 15.20 — DISPLAYED PROUDLY
 previous_mileage = 15.20
 
-# EXACT NOVEMBER KM AS YOU SAID
-nov_office = 694.3
-nov_other  = 140.5
+# AUTOMATIC NOVEMBER KM — UPDATES WHEN YOU ADD NEW TRIPS
+nov_office = trips[(trips['date'].dt.month == 11) & (trips['trip_type'] == 'Office')]['Km Run'].sum().round(1)
+nov_other  = trips[(trips['date'].dt.month == 11) & (trips['trip_type'] == 'Other')]['Km Run'].sum().round(1)
 
-# October (for display only)
-oct_trips = trips[trips['date'].dt.month == 10]
-oct_office = oct_trips[oct_trips['trip_type']=='Office']['Km Run'].sum().round(1)
-oct_other  = oct_trips[oct_trips['trip_type']=='Other']['Km Run'].sum().round(1)
+oct_office = trips[(trips['date'].dt.month == 10) & (trips['trip_type'] == 'Office')]['Km Run'].sum().round(1)
+oct_other  = trips[(trips['date'].dt.month == 10) & (trips['trip_type'] == 'Other')]['Km Run'].sum().round(1)
 
 live_km = round(current_odo - 74862.3, 1)
 live_mpg = round(live_km / 32.21, 2) if live_km > 0 else 0.00
 
-# DASHBOARD — EXACTLY WHAT YOU WANT
-st.markdown("<h1 style='text-align:center;color:#00FF00;font-size:120px;margin-top:-50px;'>15.20</h1>", unsafe_allow_html=True)
+# DASHBOARD — 15.20 + LIVE NOV KM
+st.markdown(f"<h1 style='text-align:center;color:#00FF00;font-size:120px;margin-top:-50px;'>15.20</h1>", unsafe_allow_html=True)
 st.markdown("<h2 style='text-align:center;color:white;margin-top:-40px;'>Previous Tank Mileage</h2>", unsafe_allow_html=True)
 
 c1,c2,c3,c4 = st.columns(4)
 c1.metric("Oct 2025 Office", f"{oct_office} km")
 c2.metric("Oct 2025 Other", f"{oct_other} km")
-c3.metric("Nov 2025 Office", "694.3 km")
-c4.metric("Nov 2025 Other", "140.5 km")
+c3.metric("Nov 2025 Office", f"{nov_office} km")
+c4.metric("Nov 2025 Other", f"{nov_other} km")
 
 st.markdown("---")
 st.markdown(f"<h3 style='text-align:center;color:#00FF88;'>Live: {live_mpg} km/l • {live_km} km since 28.11.2025</h3>", unsafe_allow_html=True)
@@ -128,23 +127,24 @@ st.markdown(f"<h3 style='text-align:center;color:#00FF88;'>Live: {live_mpg} km/l
 col1,col2 = st.columns([3,2])
 with col1: st.markdown(f"### Current Odometer\n<h1>{current_odo:,.1f}</h1>", unsafe_allow_html=True)
 with col2: st.markdown(f"### Today\n<h2>{datetime.now().strftime('%d %B %Y')}</h2>", unsafe_allow_html=True)
+
 st.markdown("---")
 
-with st.expander("Daily Car Log – Exactly Your PDF", expanded=True):
+with st.expander("Daily Car Log", expanded=True):
     show = trips.copy()
     show['Date'] = show['date'].dt.strftime('%d.%m.%Y')
     show = show[['Date','fr','to_loc','odo','Km Run','trip_type']]
     show.columns = ['Date','From','To','Odometer','Km Run','Type']
     st.dataframe(show.style.format({"Odometer":"{:.1f}","Km Run":"{:.1f}"}), use_container_width=True)
 
-# ADD TRIP & FUEL — FULLY WORKING
+# ADD TRIP & FUEL — WORKING 100%
 with st.expander("Add Trip", expanded=False):
     c1,c2,c3,c4,c5 = st.columns(5)
     d = c1.date_input("Date", datetime.today(), key="trip_date")
-    f = c2.text_input("From", "Office")
-    t = c3.text_input("To", "Home")
-    o = c4.number_input("Odometer", value=current_odo+15, step=0.1, format="%.1f")
-    ty = c5.selectbox("Type", ["Office","Other"])
+    f = c2.text_input("From", "Hospital")
+    t = c3.text_input("To", "Office")
+    o = c4.number_input("Odometer", value=current_odo+20, step=0.1, format="%.1f")
+    ty = c5.selectbox("Type", ["Office","Other"], index=0)
     if st.button("ADD TRIP", type="primary"):
         if o <= current_odo: st.error("Odometer must increase!")
         else:
@@ -152,7 +152,8 @@ with st.expander("Add Trip", expanded=False):
             conn.execute("INSERT INTO trips(date,fr,to_loc,odo,trip_type) VALUES(?,?,?,?,?)",
                         (d.strftime("%d.%m.%Y"), f, t, o, ty))
             conn.commit(); conn.close()
-            st.success("Trip added!"); st.rerun()
+            st.success("Trip added! November Office km updated automatically")
+            st.rerun()
 
 with st.expander("Add Fuel Filling"):
     f1,f2,f3 = st.columns(3)
@@ -164,6 +165,7 @@ with st.expander("Add Fuel Filling"):
         conn.execute("INSERT INTO fuel(date,litres,odo) VALUES(?,?,?)",
                     (fd.strftime("%d.%m.%Y"), li, fo))
         conn.commit(); conn.close()
-        st.success("Fuel saved!"); st.rerun()
+        st.success("Fuel saved!")
+        st.rerun()
 
-st.success("ABSOLUTE FINAL • NOV OFFICE 694.3 | OTHER 140.5 • 15.20 GREEN • NO MORE CHANGES EVER")
+st.success("ETERNAL FINAL • 15.20 • NOV KM UPDATES LIVE • ADD OFFICE TRIP = IT INCREASES INSTANTLY")
