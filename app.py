@@ -76,14 +76,14 @@ if not os.path.exists(DB):
         ("26.11.2025","Office","Home",74831.1,"Office"),
         ("27.11.2025","Home","Office",74846.6,"Office"),
         ("27.11.2025","Office","Home",74862.3,"Office"),   # CORRECTLY ADDED — OFFICE TRIP
-        ("28.11.2025","Petrol Filled","",74846.6,"Fuel"),
-        ("28.11.2025","Home","Centre for Sight",74862.3,"Other")
+        ("28.11.2025","Petrol Filled","",74862.3,"Fuel"),
+        ("28.11.2025","Home","Centre for Sight",74867.8,"Other")
     ]
     conn.executemany("INSERT INTO trips(date,fr,to_loc,odo,trip_type) VALUES(?,?,?,?,?)", trips_data)
     conn.executemany("INSERT INTO fuel(date,litres,odo) VALUES(?,?,?)", [
         ("28.10.2025",32.88,73905.0),
         ("11.11.2025",31.98,74375.7),
-        ("28.11.2025",32.21,74846.6)
+        ("28.11.2025",32.21,74862.3)
     ])
     conn.commit()
     conn.close()
@@ -172,3 +172,4 @@ with st.expander("Add Fuel Filling"):
         st.success("Fuel saved!"); st.rerun()
 
 st.success("FINAL • 15.20 DISPLAYED • 27.11.2025 OFFICE→HOME INCLUDED • PEACE FOREVER")
+
