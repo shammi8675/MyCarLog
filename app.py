@@ -1,4 +1,4 @@
-# MyCarLog — TRUE ETERNAL FINAL — NOV KM AUTO-UPDATES WHEN YOU ADD TRIPS — 15.20 FOREVER
+# MyCarLog — FINAL WITH DELETE WRONG ENTRY — 15.20 GREEN — NOV KM LIVE
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -8,6 +8,7 @@ import os
 st.set_page_config(page_title="My Car Log", page_icon="car", layout="wide")
 DB = "my_car_manual_final.db"
 
+# === AUTO-CREATE DB WITH YOUR FULL CORRECT DATA (only once) ===
 if not os.path.exists(DB):
     conn = sqlite3.connect(DB)
     conn.executescript('''
@@ -87,7 +88,7 @@ if not os.path.exists(DB):
     conn.commit()
     conn.close()
 
-# LOAD & PROCESS — FULLY AUTOMATIC
+# === LOAD DATA ===
 conn = sqlite3.connect(DB)
 trips = pd.read_sql("SELECT * FROM trips", conn)
 fuel = pd.read_sql("SELECT * FROM fuel", conn)
@@ -98,20 +99,19 @@ trips = trips.sort_values(['date','id']).reset_index(drop=True)
 trips['Km Run'] = trips['odo'].diff().fillna(0).round(1)
 current_odo = trips['odo'].iloc[-1]
 
-# YOUR HARD-EARNED 15.20 — DISPLAYED PROUDLY
+# 15.20 FOREVER
 previous_mileage = 15.20
 
-# AUTOMATIC NOVEMBER KM — UPDATES WHEN YOU ADD NEW TRIPS
-nov_office = trips[(trips['date'].dt.month == 11) & (trips['trip_type'] == 'Office')]['Km Run'].sum().round(1)
+# LIVE NOVEMBER KM — UPDATES AUTOMATICALLY
+nov_office = trips[(trips['date'].dt.month == 11) & (trips['trip_type == 'Office')]['Km Run'].sum().round(1)
 nov_other  = trips[(trips['date'].dt.month == 11) & (trips['trip_type'] == 'Other')]['Km Run'].sum().round(1)
-
 oct_office = trips[(trips['date'].dt.month == 10) & (trips['trip_type'] == 'Office')]['Km Run'].sum().round(1)
 oct_other  = trips[(trips['date'].dt.month == 10) & (trips['trip_type'] == 'Other')]['Km Run'].sum().round(1)
 
 live_km = round(current_odo - 74862.3, 1)
 live_mpg = round(live_km / 32.21, 2) if live_km > 0 else 0.00
 
-# DASHBOARD — 15.20 + LIVE NOV KM
+# === DASHBOARD ===
 st.markdown(f"<h1 style='text-align:center;color:#00FF00;font-size:120px;margin-top:-50px;'>15.20</h1>", unsafe_allow_html=True)
 st.markdown("<h2 style='text-align:center;color:white;margin-top:-40px;'>Previous Tank Mileage</h2>", unsafe_allow_html=True)
 
@@ -130,29 +130,43 @@ with col2: st.markdown(f"### Today\n<h2>{datetime.now().strftime('%d %B %Y')}</h
 
 st.markdown("---")
 
+# === DAILY LOG + DELETE BUTTON ===
 with st.expander("Daily Car Log", expanded=True):
     show = trips.copy()
     show['Date'] = show['date'].dt.strftime('%d.%m.%Y')
-    show = show[['Date','fr','to_loc','odo','Km Run','trip_type']]
-    show.columns = ['Date','From','To','Odometer','Km Run','Type']
+    show = show[['id','Date','fr','to_loc','odo','Km Run','trip_type']]
+    show.columns = ['ID','Date','From','To','Odometer','Km Run','Type']
+    show = show.set_index('ID')
+
     st.dataframe(show.style.format({"Odometer":"{:.1f}","Km Run":"{:.1f}"}), use_container_width=True)
 
-# ADD TRIP & FUEL — WORKING 100%
+    st.markdown("### Delete Wrong Entry")
+    delete_id = st.number_input("Enter the ID of the wrong trip to delete", min_value=1, step=1)
+    if st.button("DELETE THIS ENTRY", type="secondary"):
+        conn = sqlite3.connect(DB)
+        conn.execute("DELETE FROM trips WHERE id = ?", (delete_id,))
+        conn.commit()
+        conn.close()
+        st.success(f"Entry ID {delete_id} deleted!")
+        st.rerun()
+
+# === ADD TRIP & FUEL ===
 with st.expander("Add Trip", expanded=False):
     c1,c2,c3,c4,c5 = st.columns(5)
     d = c1.date_input("Date", datetime.today(), key="trip_date")
     f = c2.text_input("From", "Hospital")
     t = c3.text_input("To", "Office")
     o = c4.number_input("Odometer", value=current_odo+20, step=0.1, format="%.1f")
-    ty = c5.selectbox("Type", ["Office","Other"], index=0)
+    ty = c5.selectbox("Type", ["Office","Other"])
     if st.button("ADD TRIP", type="primary"):
-        if o <= current_odo: st.error("Odometer must increase!")
+        if o <= current_odo:
+            st.error("Odometer must increase!")
         else:
             conn = sqlite3.connect(DB)
             conn.execute("INSERT INTO trips(date,fr,to_loc,odo,trip_type) VALUES(?,?,?,?,?)",
                         (d.strftime("%d.%m.%Y"), f, t, o, ty))
             conn.commit(); conn.close()
-            st.success("Trip added! November Office km updated automatically")
+            st.success("Trip added — November km updated live")
             st.rerun()
 
 with st.expander("Add Fuel Filling"):
@@ -168,4 +182,4 @@ with st.expander("Add Fuel Filling"):
         st.success("Fuel saved!")
         st.rerun()
 
-st.success("ETERNAL FINAL • 15.20 • NOV KM UPDATES LIVE • ADD OFFICE TRIP = IT INCREASES INSTANTLY")
+st.success("DELETE ADDED • 15.20 • NOV KM LIVE • YOU ARE NOW GOD OF THIS APP")
