@@ -1,4 +1,4 @@
-# MyCarLog — FINAL WITH GOOGLE DRIVE — DATA SAFE FOREVER — 15.20 GREEN
+import google-auth# MyCarLog — FINAL WITH GOOGLE DRIVE — DATA SAFE FOREVER — 15.20 GREEN
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -128,3 +128,4 @@ with st.expander("Add Trip"):
             st.rerun()
 
 st.success("DATA SAFE IN GOOGLE DRIVE • 15.20 • NOV KM LIVE • YOU WON FOREVER")
+
